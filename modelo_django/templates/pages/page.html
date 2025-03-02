@@ -1,0 +1,528 @@
+{% extends 'layouts/base2.html' %}
+{% load static %}
+
+{% block title %} Buscadores {% endblock title %}
+
+{% block content %}
+
+<!-- <div id="custom-alert" class="custom-alert" style="display: none;">
+  <span id="alert-message">{{ message }}</span>
+  <button onclick="closeAlert()">Cerrar</button>
+</div> -->
+  <!-- [ Main Content ] start -->
+  <div class="pc-container">
+    <div class="pc-content">
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h5 class="m-b-10">Buscadores</h5>
+              </div>
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../navigation/index.html">Home</a></li>
+                <li class="breadcrumb-item" aria-current="page">Buscadores</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ breadcrumb ] end -->
+
+
+      <!-- [ Main Content ] start -->
+      <div class="row">
+        <!-- [ sample-page ] start -->
+        <div class="col-sm-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Buscadores</h5>
+            </div>
+            <div class="card-body">
+              <div class="card-body" style="padding-top: 0;padding-bottom: 0;">
+                <div class="analitica-filter">
+                  <div class="analitica-filter__title-container">
+                    <i class="ti ti-file-search"></i>
+                    <h3 class="filter__title">BUSCADOR COMPUTRABAJO</h3>
+                  </div>
+                  <div>
+                    <div id="loading-spinner_computrabajo" class="spinner-border text-primary" role="status" style="display:none;"></div>
+                  </div>
+                  <div id="analitica-filter__container" class="analitica-filter__container">
+                    <form id="accionForm" method="post" action="{% url 'page' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="accion" id="accionInput">
+                      <button type="submit" class="analitica-filter__dropdown btn btn-success" data-accion="iniciar_computrabajo">
+                        <span class="analitica-filter__span"><i class="analitica-filter__img ti ti-player-play"></i>Iniciar</span>
+                      </button>
+                      <button class="analitica-filter__dropdown btn btn-danger" data-accion="detener_computrabajo">
+                        <span class="analitica-filter__span"><i class="analitica-filter__img ti ti-player-stop"></i>Detener</span>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="padding-top: 0;padding-bottom: 0;">
+                <div class="analitica-filter">
+                  <div class="analitica-filter__title-container">
+                    <i class="ti ti-file-search"></i>
+                    <h3 class="filter__title">BUSCADOR ELEMPLEO</h3>
+                  </div>
+                  <div>
+                    <div id="loading-spinner_elempleo" class="spinner-border text-primary" role="status" style="display:none;"></div>
+                  </div>
+                  <div id="analitica-filter__container" class="analitica-filter__container">
+                    <button class="analitica-filter__dropdown btn btn-success" data-accion="iniciar_elempleo">
+                      <span class="analitica-filter__span"><i class="analitica-filter__img ti ti-player-play"></i>Iniciar</span>
+                    </button>
+                    <button class="analitica-filter__dropdown btn btn-danger" data-accion="detener_elempleo">
+                      <span class="analitica-filter__span"><i class="analitica-filter__img ti ti-player-stop"></i>Detener</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="padding-top: 0;padding-bottom: 0;">
+                <div id="computrabajo_table" style="width: 96.5%; margin: 24px;" class="ag-theme-balham"></div>
+              </div>
+              <div class="div-buttons" style="display: none;padding: 24px;justify-content:flex-start;margin: 24px;width: 96.5% !important;">
+                <button id="show-button" class="btn btn-primary" style="background-color: rgb(103, 58, 183);border-color: rgb(103, 58, 183);height: fit-content;">Mostrar</button>
+              </div>
+              
+            </div>
+          </div>
+          </div>
+        </div>
+        <!-- [ sample-page ] end -->
+      </div>
+      <!-- [ Main Content ] end -->
+    </div>
+  </div>
+  <!-- [ Main Content ] end -->
+
+  <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+  <script>
+    // Agregar un manejador de eventos para los botones
+  document.querySelectorAll('[data-accion]').forEach(function(button) {
+    button.addEventListener('click', function(event) {
+      // Prevenir el comportamiento por defecto del botón
+      event.preventDefault();
+      
+      // Obtener el valor del atributo 'data-accion' y asignarlo al campo hidden
+      document.getElementById('accionInput').value = button.getAttribute('data-accion');
+      
+      // Enviar el formulario de manera asíncrona con AJAX (sin recargar la página)
+      var form = document.getElementById('accionForm');
+      var formData = new FormData(form);
+      
+      fetch(form.action, {
+        method: form.method,
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Maneja la respuesta aquí si es necesario
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  });
+  </script>
+  <script>
+    let dataGlobal;
+
+    let gridInstances = {};
+    function drawTableGridGeneral(data, idTable, headers, paginationPage, posicion, paginationId, heightRow) {
+        console.log('drawTableGridGeneral data',data)
+        if (!Array.isArray(data)||data.length==0) {
+            return;
+        }
+
+        const gridElement = document.getElementById(idTable);
+
+        if (gridElement) {
+            if (gridInstances[idTable] && gridInstances[idTable].api) {
+                gridInstances[idTable].api.destroy();
+            }
+            gridElement.innerHTML = '';
+        }
+
+        const customIcons = {
+            sortAscending: `<span class="ag-icon ag-icon-asc" unselectable="on" role="presentation"></span>`,
+            sortDescending: `<span class="ag-icon ag-icon-desc" unselectable="on" role="presentation"></span>`,
+            sortNone: `<span class="ag-icon ag-icon-none" unselectable="on" role="presentation"></span>`,
+            filter: `<span class="ag-icon ag-icon-filter" unselectable="on" role="presentation"></span>`
+        };
+
+        if (posicion) {
+            if (Array.isArray(data)) {
+                data.forEach((obj, index) => {
+                    obj.index = index + 1;  // El índice comienza desde 1
+                });
+            }
+        }
+
+        let columnDefs = [];
+        for (let key in headers) {
+            if (headers.hasOwnProperty(key)) {
+
+                let headerClass = headers[key].headerClass;
+                let finalHeaderClass = 'custom-header';  // Clase predeterminada
+
+                if (headerClass) {
+                    if (Array.isArray(headerClass)) {
+                        finalHeaderClass = ['custom-header', ...headerClass].join(' ');
+                    } else {
+                        finalHeaderClass = headerClass;
+                    }
+                }
+                let encabezado = {
+                    headerName: headers[key].title,
+                    field: key, 
+                    headerClass:  finalHeaderClass,
+                    flex: headers[key].flex != null ? headers[key].flex : 1,
+                    minWidth: 150, 
+                    sort: null, 
+                    unSortIcon: true,
+                    cellClass: 'custom-cell-class',
+                    headerTooltip:  headers[key].sortable !== false ? "Click para ordenar columna" : undefined,
+                };
+                encabezado.sortable = headers[key].sortable !== false;
+
+                if (headers[key].valueFormatter) encabezado.valueFormatter = headers[key].valueFormatter;
+
+                if (headers[key].cellRender) encabezado.cellRenderer = headers[key].cellRender;
+
+                columnDefs.push(encabezado);
+            }
+        }
+
+        if (typeof data === 'string') {
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                console.error('Error al parsear el JSON:', e);
+                return;
+            }
+        }
+
+        if (Array.isArray(data)) {
+            const gridOptions = {
+                theme: "legacy",
+                columnDefs: columnDefs,
+                rowData: data,
+                pagination: true,
+                paginationPageSize: paginationPage,
+                paginationPageSizeSelector: [paginationPage, 7, 14, 30],
+                suppressHorizontalScroll: false,
+                suppressPaginationPanel: true,
+                suppressCellSelection: false,  
+                domLayout: 'autoHeight',
+                rowStyle: { fontFamily: 'Roboto', fontSize: '20px' },
+                getRowHeight: function(params) {
+                    // Iteramos sobre todas las celdas de la fila y obtenemos la longitud de los valores
+                    let maxLength = 0;
+                    const lineHeight = 20; // Altura de cada línea de texto
+                    const maxCharsPerLine = 50; // Cantidad máxima de caracteres por línea
+
+                    // Iteramos sobre todas las propiedades de la fila (cada celda)
+                    Object.keys(params.data).forEach(key => {
+                        const cellContent = params.data[key];
+                        if (typeof cellContent === 'string' && !cellContent.includes('<img')) { // Asegurarse de que sea texto y no contenga img
+                            maxLength = Math.max(maxLength, cellContent.length);
+                        }
+                    });
+                    //si heightRow es nulo
+                    if(heightRow == null){
+                        // Calculamos cuántas líneas son necesarias para el texto más largo
+                        const numLines = Math.ceil(maxLength / maxCharsPerLine);
+
+                        // La altura de la fila será al menos 50px, o la cantidad de líneas multiplicada por la altura de línea
+                        const rowHeight = Math.max(10, (numLines + 1) * lineHeight);
+                        return rowHeight;
+                    }else{
+                        return heightRow;
+                    }
+                    
+                },
+                onGridReady: function(event) {
+                    const gridApi = event.api;  // Aquí tienes acceso a la API de la instancia de AG Grid
+                    gridInstances[idTable] = event.api;
+                },
+                onPaginationChanged: function () {
+                    setTimeout(() => {
+                        updateCustomPaginator(idTable, paginationId);  // Actualiza el paginador después de la paginación
+                    }, 100);
+                }
+            }
+            // Inicializar el grid correctamente
+            const gridDiv = document.querySelector('#' + idTable);
+            gridInstances[idTable] = agGrid.createGrid(gridDiv, gridOptions);  // Usamos agGrid.createGrid()
+            
+            // Establecer el estilo de la tabla
+            let element = document.getElementById(idTable);
+            element.setAttribute('style', 'position: relative; margin: 24px; width: 96.5% !important;');
+
+            // Crear el paginador debajo de la tabla con un ID único
+            const paginationContainer = document.createElement('div');
+            paginationContainer.classList.add('dataTables_paginate', 'paging_simple', 'text-center');
+            paginationContainer.style.cssText += 'margin: 10px 0 10px !important;'
+            paginationContainer.id = paginationId;
+            paginationContainer.style.display = 'flex';
+            paginationContainer.style.justifyContent = 'end';
+            paginationContainer.style.alignItems = 'center';
+            paginationContainer.style.gap = '10px';
+            paginationContainer.style.padding = '0 15px';
+
+            // Botón "Anterior"
+            const prevButton = document.createElement('div');
+            prevButton.classList.add('paginate_button', 'previous', 'disabled');
+            prevButton.id = `paginate_previous_${paginationId}`;
+            prevButton.style.width = '32px';
+            prevButton.style.height = '32px';
+            prevButton.style.background = 'rgb(104, 104, 104)';
+            prevButton.style.borderRadius = '6px';
+            prevButton.style.display = 'flex';
+            prevButton.style.alignItems = 'center';
+            prevButton.style.justifyContent = 'center';
+            prevButton.style.cursor = 'pointer';
+            prevButton.innerHTML = `<i class="ti ti-arrow-narrow-left" style="font-size: 28px; color: #fff;"></i>`;
+            prevButton.addEventListener('click', () => {
+                gridInstances[idTable].paginationGoToPreviousPage();
+            });
+
+            // Texto de página
+            const pageInfo = document.createElement('span');
+            pageInfo.classList.add('datatable-info-text');
+            pageInfo.id = `page_info_${paginationId}`;
+            pageInfo.style.color = '#9C9B9B';
+            pageInfo.style.fontSize = '12px';
+            pageInfo.style.fontFamily = 'Poppins';
+            pageInfo.style.fontWeight = '700';
+            pageInfo.style.lineHeight = '16px';
+            pageInfo.textContent = `Pág 1 de 6`;  // Texto de página dinámico
+
+            // Botón "Siguiente"
+            const nextButton = document.createElement('div');
+            nextButton.classList.add('paginate_button', 'next');
+            nextButton.id = `paginate_next_${paginationId}`;
+            nextButton.style.width = '32px';
+            nextButton.style.height = '32px';
+            nextButton.style.background = 'rgb(104, 104, 104)';
+            nextButton.style.borderRadius = '6px';
+            nextButton.style.display = 'flex';
+            nextButton.style.alignItems = 'center';
+            nextButton.style.justifyContent = 'center';
+            nextButton.style.cursor = 'pointer';
+            nextButton.innerHTML = `<i class="ti ti-arrow-narrow-right" style="font-size: 28px; color: #fff;"></i>`;
+            nextButton.addEventListener('click', () => {
+                gridInstances[idTable].paginationGoToNextPage();
+            });
+
+            paginationContainer.appendChild(prevButton);
+            paginationContainer.appendChild(pageInfo);
+            paginationContainer.appendChild(nextButton);
+
+            const paginationDivContainer = document.createElement('div');
+            paginationDivContainer.style.position = 'relative';  // Puedes ajustar los estilos que necesites
+            paginationDivContainer.style.width = '100%';
+            paginationDivContainer.style.boxSizing = 'border-box';
+            // Insertar el paginador debajo de la tabla
+            gridElement.appendChild(paginationDivContainer);
+            paginationDivContainer.appendChild(paginationContainer)
+        } else {
+            console.error("El 'data' recibido no es un array válido.");
+        }
+  }
+
+  function updateCustomPaginator(idTable, paginationId) {
+        const gridApi = gridInstances[idTable];
+
+        if (!gridApi) {
+            console.error('Error: AG Grid API no disponible para la tabla:', idTable);
+            return;
+        }
+        const currentPage = gridApi.paginationGetCurrentPage() + 1;
+        const totalPages = gridApi.paginationGetTotalPages();
+
+        document.getElementById(`page_info_${paginationId}`).textContent = `Pág ${currentPage} de ${totalPages}`;
+
+        const prevButton = document.getElementById(`paginate_previous_${paginationId}`);
+        const nextButton = document.getElementById(`paginate_next_${paginationId}`);
+
+        if (currentPage === 1) {
+            prevButton.classList.add('disabled');
+        } else {
+            prevButton.classList.remove('disabled');
+        }
+
+        if (currentPage === totalPages || totalPages === 0) {
+            nextButton.classList.add('disabled');
+        } else {
+            nextButton.classList.remove('disabled');
+        }
+    }
+
+  let headers = {
+    idOferta: {
+              title: 'idOferta',
+              flex: 0.1,
+            },
+    titulo_oferta: {
+            title: 'Titulo Oferta',
+          },
+    salario: {
+            title: 'Salario',
+            flex: 0.5,
+          },
+    ubicacion: {
+              title: 'Ubicacion',
+              flex: 0.8
+            },
+    page: {
+        title: 'Fuente',
+        flex: 0.2
+        },
+    /* captured_at: {
+      title: 'Fecha de captura',
+    } */
+  };
+
+  function showButton() {
+    // Obtener el contenedor donde se agregarán los botones
+    const container = document.getElementById('1').parentNode;
+
+    container.classList.add('div-buttons');
+
+    const showButton2 = document.getElementById('show-button')
+    const container2 = showButton2.parentNode
+
+    let containerButtons;
+
+    containerButtons = document.getElementById('containerButtons')
+
+    if (!containerButtons) {
+      containerButtons = document.createElement('div')
+      containerButtons.id = 'containerButtons'
+      containerButtons.style.width = '20%'
+      containerButtons.style.display = 'flex'
+      containerButtons.style.justifyContent = 'center'
+      containerButtons.style.gap = '24px'
+
+      // Crear el primer botón
+      const showButton = document.createElement('button');
+      showButton.textContent = 'Ocultar';
+      showButton.classList.add('btn')
+      showButton.classList.add('btn-primary')
+      showButton.style.backgroundColor = '#673ab7'
+      showButton.style.borderColor = '#673ab7'
+      showButton.style.height = 'fit-content'
+      containerButtons.appendChild(showButton)
+
+      const iconoRefresh = document.createElement('i');
+      iconoRefresh.classList.add('ti')
+      iconoRefresh.classList.add('ti-refresh')
+
+      const refreshButton = document.createElement('button');
+      refreshButton.id = 'refresh-data'
+      refreshButton.classList.add('btn')
+      refreshButton.classList.add('btn-primary')
+      refreshButton.style.backgroundColor = '#673ab7'
+      refreshButton.style.borderColor = '#673ab7'
+      refreshButton.style.height = 'fit-content'
+      refreshButton.appendChild(iconoRefresh)
+      containerButtons.appendChild(refreshButton)
+
+
+
+      container.insertBefore(containerButtons, container.firstChild);
+
+      // Obtener el div cuyo estado de visibilidad queremos cambiar
+      const div = document.getElementById('computrabajo_table');
+
+      // Agregar un manejador de eventos al botón
+      showButton.addEventListener('click', function() {
+        // Verificar si el div está visible
+        if (div.style.display === 'none' || div.style.display === '') {
+          // Si está oculto o no tiene estilo (por defecto), mostrarlo
+          div.style.display = 'block';
+          container2.style.display = 'none'
+        } else {
+          // Si está visible, ocultarlo
+          div.style.display = 'none';
+          container2.style.display = 'flex'
+        }
+
+      
+      });
+
+      showButton2.addEventListener('click', function() {
+        console.log('btn Mostrar')
+        // Verificar si el div está visible
+        div.style.display = 'block';
+        container2.style.display = 'none'
+
+      
+      });
+    };
+  }
+
+  // Función para agregar el event listener al botón de refresh
+  function listenerRefresh() {
+    const refreshButton = document.getElementById('refresh-data');
+
+    // Aseguramos que el listener se agregue solo una vez
+    if (refreshButton) {
+      refreshButton.removeEventListener('click', handleClick); // Remove any previous listeners
+      refreshButton.addEventListener('click', handleClick);
+    }
+  }
+
+  // Función que se ejecuta cuando se hace clic en el botón de refresh
+  async function handleClick() {
+    console.log('refresh')
+    await obtenerDatos();
+    console.log('ya Refresco')
+  }
+
+  async function obtenerDatos() {
+    console.log('buscando datos')
+        try {
+            const response = await fetch("{% url 'obtener_datos' %}");
+            const data = await response.json();
+            dataGlobal = data.datos;
+            if (dataGlobal) {
+              drawTableGridGeneral(dataGlobal,'computrabajo_table',headers,10,false,'1',50)
+              showButton()
+              listenerRefresh()
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+  listenerRefresh();
+  obtenerDatos();
+  
+  
+  
+
+  
+  
+    
+  </script>
+{% if message %}
+  <script type="text/javascript">
+    /* // Mostrar el mensaje de alerta personalizado
+    window.onload = function() {
+        document.getElementById('custom-alert').style.display = 'flex';
+    }
+
+    function closeAlert() {
+      document.getElementById('custom-alert').style.display = 'none';
+    } */
+  </script>
+{% endif %}
+{% endblock content %}
