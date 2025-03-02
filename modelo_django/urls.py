@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from visual import views
+from ponde import views
 from django.contrib.auth import views as auth_views
 from django.views.generic import RedirectView
 from django.contrib.auth.views import LogoutView
