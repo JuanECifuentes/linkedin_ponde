@@ -49,7 +49,7 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
         page.goto(url_anuncio)
 
         final_data = {
-            "anuncio": '',
+            "anuncio": {},
             "caught": 0,
             "issues": 0,
             "exceptions": [],
@@ -59,6 +59,8 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
         
         logging.info(f"Getting url: {url_anuncio}")
         time.sleep(3)
+
+        final_data['anuncio']['url'] = url_anuncio
 
         username_input = page.query_selector('#username')
         if username_input:
@@ -89,12 +91,19 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
 
         time.sleep(5)
 
+        try:
+            cargo = page.query_selector('div.artdeco-entity-lockup__title.ember-view.display-flex.align-items-center p').text_content()
+            final_data['anuncio']['cargo'] = cargo.replace('\n', '').replace('  ','').replace('Cargo','').strip()
+        except Exception as e:
+            logging.error('No se encontro el titulo del cargo')
+            final_data['exceptions'].append(e)
+
         candidatos = page.query_selector_all('ul.artdeco-list li a')
 
         for index, candidato in enumerate(candidatos):
             row_dict = {}
             candidato.click()
-            time.sleep(4)
+            time.sleep(2)
             link = f'https://www.linkedin.com{candidato.get_attribute("href")}'
 
             nombre_candidato = page.query_selector('//*[@id="hiring-detail-root"]/div[1]/div[1]/div[1]/h1')
@@ -149,7 +158,7 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
                     logging.error(f'Error al obtener la educacion del candidato {ex}')
 
             try:
-                curriculum_a = page.query_selector_all('div.p0.mt4.artdeco-card a')
+                curriculum_a = page.query_selector_all('div.p0.mt4.artdeco-card a') #TODO No esta trayendo bien el curriculum
                 for cur in curriculum_a:
                     href = cur.get_attribute('href')
                     if 'www.linkedin.com' in href:
@@ -162,15 +171,23 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
             for preg in preseleccion_li:
                 try:
                     preg_title = preg.query_selector('xpath=//div//p[1]').text_content().strip()
-                    preg_resp_ideal = preg.query_selector('xpath=//div//p[2]//span[2]').text_content().strip()
-                    preg_resp_candidato = preg.query_selector('xpath=//div//p[3]').text_content().replace('Respuesta del candidato\n','').strip()
+                    preg_resp_ideal = preg.query_selector('xpath=//div//p[2]//span[2]').text_content().strip().upper().replace('YES','SI').replace('SÍ','SI')
+                    try:
+                        preg_resp_ideal = int(preg_resp_ideal)
+                    except:
+                        pass
+                    preg_resp_candidato = preg.query_selector('xpath=//div//p[3]').text_content().replace('Respuesta del candidato\n','').strip().upper().replace('YES','SI').replace('SÍ','SI')
+                    try:
+                        preg_resp_candidato = int(preg_resp_candidato)
+                    except:
+                        pass
                     row_dict['Preseleccion'][preg_title] = {'Respuesta ideal': preg_resp_ideal, 'Respuesta candidato': preg_resp_candidato}
                 except Exception as ex:
                     logging.error(f'Error al obtener la pregunta de preseleccion del candidato {ex}')
 
             final_data['process_data'][row_dict['Nombre']] = row_dict
             final_data['caught'] += 1
-            logging.info(f"{row_dict['Nombre']} was processed successfully")
+            logging.info(f"{row_dict['Nombre']} was processed successfully") #TODO Falta comprobar que tome todas las ofertas
 
             if index == 5:
                 break

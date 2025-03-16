@@ -4,50 +4,56 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-# Create your models here.
-
-class Clientes(models.Model):
-    idCliente = models.AutoField(db_column='idCliente',primary_key=True)
-    nombre_cliente = models.CharField(max_length=100)
-    telefono =  models.CharField(
-        max_length=15, 
-        validators=[
-            RegexValidator(
-                regex=r'^\+?\d{7,15}$',
-                message='El número de teléfono debe contener entre 7 y 15 dígitos y puede comenzar con "+"'
-            )
-        ],
-        null=True,
-        blank=True,
-        unique=True)
-    email = models.CharField(max_length=100,null=True,blank=True)
-    redes_sociales = models.TextField(null=True,blank=True)
-    fecha_registro = models.DateTimeField(auto_created=True,default=datetime.now())
-
-    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(blank=False,null=False,auto_now=True)
-
-    def __str__(self):
-        return f'{self.nombre_cliente} ({self.idCliente})'
-    
-    class Meta:
-        verbose_name='Clientes'
-        verbose_name_plural='Clientes'
-
-
-class Ofertas(models.Model):
-    idOferta = models.AutoField(db_column='idOferta',primary_key=True)
+class OfertasLaborales(models.Model):
+    id = models.AutoField(primary_key=True)
     titulo_oferta = models.TextField()
-    salario = models.CharField(max_length=255)
-    ubicacion = models.CharField(max_length=255)
-    page = models.CharField(max_length=255)
-    captured_at = models.DateTimeField(auto_now=timezone.now())
+    enlace_oferta = models.TextField(unique=True, blank=False, null=False)
+    descripcion = models.TextField(blank=False, null=False)
+    candidatos_cant = models.IntegerField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.titulo_oferta} ({self.idOferta})'
+        return f"Oferta {self.id} - {self.fecha_creacion.strftime('%Y-%m-%d')}"
     
     class Meta:
-        verbose_name='Ofertas'
-        verbose_name_plural='Ofertas'
-        unique_together = ('titulo_oferta', 'salario', 'ubicacion')  # Aquí se establece la clave compuesta
+        verbose_name='OfertasLaborales'
+        verbose_name_plural='OfertasLaborales'
+        db_table = '"Specify"."OfertasLaborales"'
+
+class Candidatos(models.Model):
+    id_candidato = models.AutoField(primary_key=True)
+    nombre_candidato = models.TextField(blank=False, null=False)
+    ubicacion = models.TextField(blank=True, null=True)
+    enlace_perfil = models.TextField(blank=True, null=True)
+    experiencia = models.JSONField(blank=True, null=True)
+    educacion = models.JSONField(blank=True, null=True)
+    curriculum = models.TextField(blank=True, null=True)
+    preguntas_preseleccion = models.JSONField(blank=True, null=True)
+    url_oferta_candidato = models.TextField(blank=True, null=True)
+    id_oferta_laboral = models.ForeignKey(OfertasLaborales, on_delete=models.CASCADE, related_name="candidatos")
+
+    def __str__(self):
+        return f"{self.nombre_candidato} - Oferta {self.id_oferta_laboral.id}"
+    
+    class Meta:
+        verbose_name='Candidatos'
+        verbose_name_plural='Candidatos'
+        db_table = '"Specify"."Candidatos"'
+
+
+class Ponderado(models.Model):
+    id = models.AutoField(primary_key=True)
+    experiencia_cargo = models.IntegerField(blank=True, null=True)
+    experiencia_herramienta = models.IntegerField(blank=True, null=True)
+    nivel_ingles = models.IntegerField(blank=True, null=True)
+    titulo_academico = models.IntegerField(blank=True, null=True)
+    id_candidato = models.ForeignKey(Candidatos, on_delete=models.CASCADE, related_name="ponderado", unique=True)
+
+    def __str__(self):
+        return f"{self.id_candidato.nombre_candidato} - Oferta id: {self.id_candidato.id_oferta_laboral.id}"
+    
+    class Meta:
+        verbose_name='Ponderado'
+        verbose_name_plural='Ponderado'
+        db_table = '"Specify"."Ponderado"'
+
