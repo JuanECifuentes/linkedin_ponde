@@ -26,10 +26,9 @@ urlpatterns = [
     path('accounts/login/', views.LoginUsuario.as_view(), name='login'),
     path('accounts/logout/', LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
-    path('adminberry/', include('admin_berry.urls')),
-    path('page/', views.ButtonsView.as_view(), name='page'),
     path('page/dashboard/', views.DashBoard.as_view(), name='dashboard'),
-    path('page/datos/', views.obtener_datos, name='obtener_datos')
+
+    path('adminberry/', include('admin_berry.urls')),
 
 
 ]
