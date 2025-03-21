@@ -9,13 +9,7 @@
             <path d="M9.64251 11.5938L5.99888 7.94713L2.35224 11.5938C2.10708 11.8202 1.77833 11.9589 1.41734 11.9589C0.655629 11.9589 0.0378608 11.3411 0.0378608 10.5794C0.0378608 10.2184 0.176559 9.88965 0.403724 9.64375L0.402974 9.64487L4.04961 5.99824L0.402974 2.35161C0.154067 2.10232 0 1.7582 0 1.3781C0 0.617132 0.616644 0.000488281 1.37761 0.000488281C1.37873 0.000488281 1.37948 0.000488281 1.38061 0.000488281C1.38173 0.000488281 1.38361 0.000488281 1.38511 0.000488281C1.76371 0.000488281 2.10596 0.154181 2.35374 0.402712L6.00037 4.04934L9.64401 0.402712C9.89142 0.164677 10.2284 0.0177318 10.5999 0.0177318C11.3616 0.0177318 11.9794 0.6355 11.9794 1.39721C11.9794 1.76795 11.8332 2.1042 11.5955 2.35198L11.5959 2.35161L7.94927 5.99824L11.5959 9.64487C11.8456 9.89453 12 10.2394 12 10.6203C12 11.382 11.3822 11.9997 10.6205 11.9997C10.2397 11.9997 9.89479 11.8453 9.64513 11.5956L9.64251 11.5938Z" fill="#686868"/>
           </svg>
         </button>
-        <div class="modal-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="6" height="20" viewBox="0 0 6 20" fill="none">
-            <path d="M1.17606 2.70103L1.17606 10.0006C1.17606 11.0087 1.99256 11.8252 3.00064 11.8252C4.00872 11.8252 4.82522 11.0087 4.82522 10.0006L4.82522 2.70103C4.82522 1.69294 4.00872 0.876448 3.00064 0.876447C1.99256 0.876447 1.17606 1.69294 1.17606 2.70103ZM3.00193 19.1235C4.01001 19.1235 4.82779 18.3057 4.82779 17.2976C4.82779 16.2896 4.01001 15.4718 3.00193 15.4718C1.99385 15.4718 1.17735 16.2883 1.17606 17.2951C1.17606 18.3032 1.99384 19.1235 3.00193 19.1235Z" fill="#00A1C9"/>
-            <path d="M3.00324 19.625L2.99938 19.625C1.71357 19.625 0.672052 18.5835 0.672052 17.2977C0.672052 16.0118 1.71357 14.9703 2.99939 14.9703C4.28392 14.9703 5.32543 16.0118 5.32672 17.2964C5.32543 18.5809 4.28649 19.6211 3.00324 19.625ZM3.00324 15.9746C2.27547 15.9746 1.68656 16.5635 1.68656 17.2912C1.68656 18.019 2.27547 18.6079 3.00324 18.6079C3.73102 18.6079 4.31992 18.019 4.31992 17.2912C4.31992 16.5635 3.73102 15.9746 3.00324 15.9746ZM3.00324 12.3267C1.71871 12.3254 0.678482 11.2852 0.675911 10.0006L0.675911 2.70105C0.675912 1.41651 1.71743 0.374998 3.00196 0.374998C4.28649 0.374998 5.328 1.41651 5.328 2.70105L5.328 10.0006C5.32672 11.2839 4.28649 12.3241 3.00324 12.3267ZM3.00324 1.37794C2.27804 1.38308 1.69171 1.96942 1.68656 2.69462L1.68656 9.99421C1.68656 10.7246 2.27804 11.316 3.00839 11.316C3.73873 11.316 4.33021 10.7246 4.33021 9.99421L4.33021 2.69333C4.33021 1.96556 3.7413 1.37665 3.01353 1.37665L3.00324 1.37794Z" fill="#00A1C9"/>
-          </svg>
-        </div>
-
+        <br>
         <!-- TITULO -->
         <div class="modal-title__candidato">
           <div class="modal_title-text" style="display: flex;text-align: justify;flex-direction: column;">
@@ -28,14 +22,15 @@
           
           <div class="modal_info" style="width: min-content;justify-content: center;height: min-content;">
             <div class="modal_info-container">
-              <a href="" title="Perfil en Linkedin" data-modal-key="enlace_perfil">
+              <a href="" title="Ver en la fuente" data-modal-key="url_oferta_candidato" target="_blank">
+                <i class="ti ti-external-link modal-icon-a"></i>
+              <a href="" title="Perfil en Linkedin" data-modal-key="enlace_perfil" target="_blank">
                 <i class="ti ti-brand-linkedin modal-icon-a"></i>
               </a>
-              <a href="" title="Ver Curriculum" data-modal-key="curriculum">
+              <!-- <a href="" title="Ver Curriculum" data-modal-key="curriculum" target="_blank">
                 <i class="ti ti-file-search modal-icon-a"></i>
-              </a>
-              <a href="" title="Ver en la fuente" data-modal-key="url_oferta_candidato">
-                <i class="ti ti-external-link modal-icon-a"></i>
+              </a> -->
+              
               </a>
             </div>
           </div>
@@ -63,22 +58,21 @@
             </div>
         </div>
         <div class="kpi-container">
+          <div class="kpi__card-container">
+            <div id='titulo_academico' style="width: auto;" class="kpi__graph-container"></div>
+            <div class="kpi__text-container">
+                <span class="kpi__text-tittle">TITULACION ACADEMICA</span>
+                <span id="total-secop2" class="kpi__text-tittle" style="font-weight: 700;"></span>
+            </div>
+          </div>
           <div id='kpi-total-secop2' class="kpi__card-container">
             <div class="kpi__graph-container">
                 <canvas id="puntajePonderado" width="35" height="35"></canvas>
             </div>
             <div class="kpi__text-container">
-                <span class="kpi__text-tittle">TOTAL PUNTAJE</span>
+                <span class="kpi__text-tittle">TOTAL PONDERADO</span>
                 <span id="total-secop2" class="kpi__text-tittle" style="font-weight: 700;"></span>
             </div>
-          </div>
-          <div  class="kpi__card-container">
-            <div id='titulo_academico' style="width: auto;" class="kpi__graph-container">
-          </div>
-          <div class="kpi__text-container">
-              <span class="kpi__text-tittle">TITULACION ACADEMICA</span>
-              <span id="total-secop2" class="kpi__text-tittle" style="font-weight: 700;"></span>
-          </div>
           </div>
         </div>
 
