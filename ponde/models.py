@@ -13,7 +13,7 @@ class OfertasLaborales(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Oferta {self.id} - {self.fecha_creacion.strftime('%Y-%m-%d')}"
+        return f"Oferta {self.id} - {self.titulo_oferta}"
     
     class Meta:
         verbose_name='OfertasLaborales'

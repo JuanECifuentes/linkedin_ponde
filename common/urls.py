@@ -1,5 +1,5 @@
 """
-URL configuration for modelo_django project.
+URL configuration for common project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -22,13 +22,16 @@ from django.views.generic import RedirectView
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="accounts/login/")),
-    path('accounts/login/', views.LoginUsuario.as_view(), name='login'),
+    path("", views.home_redirect, name="home"),
+    path('accounts/login/', views.LoginUsuario.as_view(), name='login1'),
     path('accounts/logout/', LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
     path('page/dashboard/', views.DashBoard.as_view(), name='dashboard'),
+    path('page/ponderado/', views.PonderadoView.as_view(), name='ponderado'),
 
     path('adminberry/', include('admin_berry.urls')),
+
+    path('ponde/', include('ponde.urls')),
 
 
 ]
