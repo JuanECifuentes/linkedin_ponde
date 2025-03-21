@@ -1,0 +1,457 @@
+{% extends 'layouts/base2.html' %}
+{% load static %}
+
+{% block title %} Ponderado {% endblock title %}
+
+{% block content %}
+
+<!-- <div id="custom-alert" class="custom-alert" style="display: none;">
+  <span id="alert-message">{{ message }}</span>
+  <button onclick="closeAlert()">Cerrar</button>
+</div> -->
+  <!-- [ Main Content ] start -->
+  <div class="pc-container">
+    <div class="pc-content">
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h5 class="m-b-10">Ponderado</h5>
+              </div>
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../navigation/index.html">Home</a></li>
+                <li class="breadcrumb-item" aria-current="page">Ponderado</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ breadcrumb ] end -->
+
+
+      <!-- [ Main Content ] start -->
+      <div class="row">
+        <!-- [ sample-page ] start -->
+        <div class="col-sm-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Ponderado</h5>
+            </div>
+            <div class="card-body">
+              <div class="form-group col-md-3" style="padding-left: 16px;">
+                <select class="form-select" id="id_ofertas">
+                    <option value="">Seleccionar</option>
+                    {% for key, value in ofertas.items %}
+                        <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+              </div>
+
+              <div class="card-body">
+                <div id="grid-export" style="width: 100%; padding: 20px;" class="ag-theme-balham"></div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+        <!-- [ sample-page ] end -->
+      </div>
+      <!-- [ Main Content ] end -->
+    </div>
+  </div>
+  {% include "components/js_modal_infomodal.html" %}
+  <!-- [ Main Content ] end -->
+
+  <link rel="stylesheet" href="{% static 'assets/css/components/modal_startbtn.css' %}">
+  <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+  
+  <script src="{% static 'assets/js/components/spinner/spinner.js' %}"></script>
+  <script src="{% static 'assets/js/components/table/generalTables.js' %}"></script>
+
+  <script>
+    let dataGlobal;
+    let pondeData;
+    let gridInstances = {};
+
+    function createDoughnutChart(completado, pendiente, elementId,color) {
+        console.log('dona creada:',elementId)
+        var ctx = document.getElementById(elementId).getContext('2d');
+        
+        if (ctx.chart instanceof Chart) {
+            ctx.chart.destroy();
+        }
+
+        var total = completado + pendiente;
+        var porcentajeCompletado = total > 0 ? (completado / total) * 100 : 0;
+
+        // Crear el gráfico de anillo
+        var myDoughnutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completado', 'Pendiente'],
+                datasets: [{
+                    label: 'Progreso',
+                    data: [completado, pendiente],
+                    backgroundColor: [color, '#ECECEC'], // Azul para completado, Gris para pendiente
+                    hoverOffset: 1,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,  // Deshabilitar la leyenda
+                    },
+                    tooltip: {
+                        enabled: false  // Deshabilitar los tooltips
+                    }
+                },
+                // Hacer el anillo más delgado
+                cutout: '67%', // Ajusta este valor para hacer el anillo más delgado
+            },
+            // Hook para dibujar el porcentaje en el centro
+            plugins: [{
+                beforeDraw: function(chart) {
+                    var width = chart.width,
+                        height = chart.height,
+                        ctx = chart.ctx;
+
+                    // Calcular el porcentaje en el centro del gráfico
+                    var percentage = Math.round(porcentajeCompletado) + '%';
+
+                    ctx.restore();
+                    var fontSize = Math.floor(height / 5); // Ajustar el tamaño de la fuente
+                    ctx.font = `bold ${fontSize}px 'Roboto', sans-serif`;
+                    ctx.fillStyle = "#686868";
+
+                    // Centrar el porcentaje
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(percentage, width / 2, height / 2);
+                    ctx.save();
+                }
+            }]
+        });
+        ctx.chart = myDoughnutChart;
+    }
+
+    function formatter(preguntas,campo1, campo2) {
+        return Object.entries(preguntas)
+            .map(([pregunta, respuestas]) => `
+                <strong>${pregunta}</strong>
+                <div>
+                    <div>${campo1}: <strong>${respuestas[campo1]}</strong></div>
+                    <div>${campo2}: <strong>${respuestas[campo2]}</strong></div>
+                </div>
+            `).join('<br>');
+    }  
+
+    function abrirInfo(idCandidato) {
+      const candidato = dataGlobal[idCandidato] ? dataGlobal[idCandidato] : null 
+      const preguntasPreseleccion = formatter(candidato.info.preguntas_preseleccion, 'Respuesta ideal', 'Respuesta candidato')
+      const educacion = formatter(candidato.info.educacion, 'Titulo', 'Tiempo')
+      const experiencia = formatter(candidato.info.experiencia, 'Empresa', 'Tiempo')
+
+      candidato.info['preguntasFormateadas'] = preguntasPreseleccion
+      candidato.info['educacionFormateada'] = educacion
+      candidato.info['experienciaFormateada'] = experiencia
+
+      const puntajePonderado = ponderadoProcess(candidato.ponde)
+      candidato.ponde['puntajePonderado'] = puntajePonderado
+      console.log('candidato',candidato)
+      mostrarModal('modal_infomodal', candidato)
+    }
+
+    function mostrarModal(modalId, params = {}) {
+        const info = params.info
+        const ponde = params.ponde
+        let modalElement = document.getElementById(modalId);
+        
+        Object.keys(info).forEach(key => {
+
+            const aButtonKey = ['enlace_perfil','url_oferta_candidato','curriculum']
+            try {
+                let element = modalElement.querySelector(`[data-modal-key="${key}"]`);
+                if (element) {
+                    if (aButtonKey.includes(key)) {
+                      element.href = info[key]
+                    } else{
+                      element.innerHTML = info[key];
+                    }
+                    
+                }
+            } catch {
+                console.error(`No se encontró [data-modal-key="${key}"]`);
+            }
+        });
+
+        Object.keys(ponde).forEach(key => {
+        
+
+        const colorsKpi = {
+          experiencia_cargo: '#d86aff',
+          experiencia_herramienta: '#ab3ed8',
+          puntajePonderado: '#7f00b2',
+        }
+        try {
+            let element = modalElement.querySelector(`#${key}`);
+            if (element) {
+              if (key == 'titulo_academico') {
+                let target
+                if (ponde[key] == 100) {
+                      target = `<div class="flex items-center justify-center h-full w-full">
+                        <span class="role-tag role-tag__green">
+                            <span class="point-tag rounded-full"></span>
+                                TITULADO
+                        </span>
+                    </div>`
+                    } else {
+                      target = `<div class="flex items-center justify-center h-full w-full ">
+                        <span class="role-tag role-tag__gray">
+                            <span class="point-tag rounded-full"></span>
+                                NO TITULADO
+                        </span>
+                    </div>`
+
+                    }
+                  element.innerHTML = target
+              } else {
+                createDoughnutChart(ponde[key], 100, key, colorsKpi[key])
+              }
+              
+            }
+        } catch {
+            console.error(`No se encontró [id="${key}"]`);
+        }
+        });
+
+        let modalPorAbrir = new bootstrap.Modal(modalElement);
+
+        if (modalPorAbrir) {
+          modalPorAbrir.show();
+        } else {
+          console.error('No se encontro el modal con id', modalId);
+        }
+    }
+
+    function donutChart(params) {
+        var completado = params.value;
+        var pendiente = 100-completado;
+
+        // Calcular el total y el porcentaje de completado
+        var total = completado + pendiente;
+        var porcentajeCompletado = (completado / total) * 100;
+        const uniqueId = `cell-DoughnutChart-${params.node.rowIndex}`;
+        const container = document.createElement('div');
+        container.style.height = "45px"; 
+        container.style.width = "45px"; 
+        container.style.display = "flex"; 
+        container.style.justifyContent = "center";
+        container.style.alignItems = "center";
+        const canvas = document.createElement('canvas');
+        canvas.id = uniqueId;
+        canvas.width = 50;
+        canvas.height = 50;
+        container.appendChild(canvas);
+        // Crear el gráfico de pie
+        const data = {
+            labels: ['Porcentaje', 'Resto'],
+            datasets: [{
+                data: [params.value, 100 - params.value],
+                backgroundColor: ['#673ab7', '#ECECEC'],
+                borderWidth: 0,
+            }]
+        };
+
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                devicePixelRatio: 2,
+                plugins: {
+                    legend: {
+                        display: false,  // Deshabilitar la leyenda
+                    },
+                    tooltip: {
+                        enabled: false  // Deshabilitar los tooltips
+                    }
+                },
+                // Hacer el anillo más delgado
+                cutout: '67%', // Ajusta este valor para hacer el anillo más delgado
+            },
+            // Hook para dibujar el porcentaje en el centro
+            plugins: [{
+                beforeDraw: function(chart) {
+                    var width = chart.width,
+                        height = chart.height,
+                        ctx = chart.ctx;
+
+                    // Calcular el porcentaje en el centro del gráfico
+                    var percentage = Math.round(porcentajeCompletado) + '%';
+
+                    ctx.restore();
+                    var fontSize = Math.floor(height / 4); // Ajustar el tamaño de la fuente
+                    ctx.font = `bold ${fontSize}px 'Roboto', sans-serif`;
+                    ctx.fillStyle = "#686868";
+
+                    // Centrar el porcentaje
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(percentage, width / 2, height / 2);
+                    ctx.save();
+                }
+            }]
+        });
+
+        return container; // Retornar el canvas para que se renderice
+    }
+
+    const headers = {
+              index: {
+                  title: 'Posición',
+                  flex:0.5,
+                  headerClass:['title-table']
+              },
+              nombreCandidato: {
+                  title: 'Nombre Candidato',
+                  flex:1,
+                  headerClass:['title-table']
+              },
+              experiencia_cargo: {
+                  title: 'Experiencia en el Cargo',
+                  flex:1,
+                  headerClass:['title-table'],
+                  cellRenderer: function(params) {
+                    const container = donutChart(params)
+                    return container
+                  }
+              },
+              experiencia_herramienta: {
+                  title: 'Experiencia con Herramientas',
+                  flex:1,
+                  headerClass:['title-table'],
+                  cellRenderer: function(params) {
+                    const container = donutChart(params)
+                    return container
+                  }
+              },
+              /*nivel_ingles: {
+                  title: 'Nivel de Ingles',
+                  flex:1,
+                  headerClass:['title-table'],
+                  cellRenderer: function(params) {
+                    const container = donutChart(params)
+                    return container
+                  }
+              },*/
+              titulo_academico: {
+                  title: 'Titulo Academico',
+                  flex:1,
+                  headerClass:['title-table'],
+                  cellRenderer: function(params) {
+                    let target;
+                    if (params.value == 100) {
+                      target = `<div class="flex items-center justify-center h-full w-full">
+                        <span class="role-tag role-tag__green">
+                            <span class="point-tag rounded-full"></span>
+                                TITULADO
+                        </span>
+                    </div>`
+                    } else {
+                      target = `<div class="flex items-center justify-center h-full w-full ">
+                        <span class="role-tag role-tag__gray">
+                            <span class="point-tag rounded-full"></span>
+                                NO TITULADO
+                        </span>
+                    </div>`
+
+                    }
+                    return target
+                  }
+              },
+              puntajePonderado: {
+                title: 'Puntaje ponderado',
+                  flex:1,
+                  headerClass:['title-table'],
+              },
+              id_candidato: {
+                title: 'Puntaje ponderado',
+                flex:1,
+                headerClass:['title-table'],
+                cellRenderer: function(params) {
+                  const button = `
+                      <a
+                        class="inline-block rounded-xl border border-current px-3 py-2 text-sm font-medium text-indigo-600 transition hover:scale-110 hover:shadow-xl focus:ring-3 focus:outline-hidden"
+                        title="Info Candidato" onclick="abrirInfo(${params.value})"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 12 12" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.34741 0.516846C5.25961 0.516846 4.19625 0.839415 3.29178 1.44376C2.38731 2.04811 1.68236 2.90709 1.26608 3.91208C0.849795 4.91708 0.740877 6.02294 0.953095 7.08984C1.16531 8.15673 1.68914 9.13674 2.45833 9.90593C3.22751 10.6751 4.20752 11.1989 5.27441 11.4112C6.34131 11.6234 7.44718 11.5145 8.45217 11.0982C9.45716 10.6819 10.3161 9.97695 10.9205 9.07248C11.5248 8.16801 11.8474 7.10464 11.8474 6.01684C11.8458 4.55864 11.2659 3.16061 10.2348 2.1295C9.20365 1.09839 7.80562 0.518423 6.34741 0.516846ZM6.34741 10.6002C5.44091 10.6002 4.55477 10.3314 3.80105 9.82774C3.04732 9.32412 2.45987 8.6083 2.11297 7.77081C1.76606 6.93331 1.6753 6.01176 1.85215 5.12268C2.029 4.2336 2.46552 3.41693 3.10651 2.77594C3.7475 2.13495 4.56417 1.69843 5.45325 1.52158C6.34233 1.34473 7.26388 1.4355 8.10138 1.7824C8.93887 2.1293 9.65469 2.71676 10.1583 3.47048C10.6619 4.22421 10.9307 5.11034 10.9307 6.01684C10.9294 7.23201 10.4461 8.39702 9.58684 9.25627C8.72759 10.1155 7.56258 10.5988 6.34741 10.6002ZM6.34746 5.10034H5.88913C5.76757 5.10034 5.65099 5.14863 5.56504 5.23458C5.47908 5.32054 5.4308 5.43711 5.4308 5.55867C5.4308 5.68023 5.47908 5.79681 5.56504 5.88276C5.65099 5.96872 5.76757 6.017 5.88913 6.017H6.34746V8.767C6.34746 8.88856 6.39575 9.00514 6.4817 9.09109C6.56766 9.17705 6.68424 9.22534 6.80579 9.22534C6.92735 9.22534 7.04393 9.17705 7.12989 9.09109C7.21584 9.00514 7.26413 8.88856 7.26413 8.767V6.017C7.26413 5.77389 7.16755 5.54073 6.99564 5.36882C6.82373 5.19692 6.59058 5.10034 6.34746 5.10034ZM7.03485 3.49598C7.03485 3.87568 6.72705 4.18348 6.34735 4.18348C5.96766 4.18348 5.65985 3.87568 5.65985 3.49598C5.65985 3.11629 5.96766 2.80848 6.34735 2.80848C6.72705 2.80848 7.03485 3.11629 7.03485 3.49598Z" fill="#686868"></path>
+                            <path d="M3.29178 1.44376L3.36122 1.5477L3.29178 1.44376ZM6.34741 0.516846L6.34755 0.391846H6.34741V0.516846ZM1.26608 3.91208L1.15059 3.86425L1.26608 3.91208ZM0.953095 7.08984L1.07569 7.06545L0.953095 7.08984ZM2.45833 9.90593L2.36994 9.99432L2.45833 9.90593ZM5.27441 11.4112L5.25003 11.5338L5.27441 11.4112ZM10.9205 9.07248L11.0244 9.14192L10.9205 9.07248ZM11.8474 6.01684H11.9724V6.01671L11.8474 6.01684ZM10.2348 2.1295L10.3231 2.04111L10.2348 2.1295ZM3.80105 9.82774L3.7316 9.93167L3.80105 9.82774ZM6.34741 10.6002V10.7252H6.34755L6.34741 10.6002ZM2.11297 7.77081L1.99748 7.81864L2.11297 7.77081ZM1.85215 5.12268L1.97475 5.14707L1.85215 5.12268ZM3.10651 2.77594L3.1949 2.86433L3.10651 2.77594ZM5.45325 1.52158L5.42886 1.39898L5.45325 1.52158ZM8.10138 1.7824L8.05354 1.89788L8.10138 1.7824ZM10.9307 6.01684L11.0557 6.01698V6.01684H10.9307ZM9.58684 9.25627L9.49845 9.16788L9.58684 9.25627ZM5.56504 5.23458L5.47665 5.14619L5.47665 5.14619L5.56504 5.23458ZM6.34746 6.017H6.47246V5.892H6.34746V6.017ZM6.4817 9.09109L6.39332 9.17948H6.39332L6.4817 9.09109ZM7.12989 9.09109L7.21827 9.17948H7.21827L7.12989 9.09109ZM6.99564 5.36882L6.90725 5.45721L6.99564 5.36882ZM3.36122 1.5477C4.24514 0.957084 5.28434 0.641846 6.34741 0.641846V0.391846C5.23489 0.391846 4.14736 0.721746 3.22233 1.33983L3.36122 1.5477ZM1.38156 3.95992C1.78838 2.97777 2.47731 2.13831 3.36122 1.5477L3.22233 1.33983C2.2973 1.95791 1.57633 2.83642 1.15059 3.86425L1.38156 3.95992ZM1.07569 7.06545C0.868298 6.0228 0.974741 4.94207 1.38156 3.95992L1.15059 3.86425C0.724849 4.89208 0.613456 6.02308 0.830497 7.11422L1.07569 7.06545ZM2.54671 9.81754C1.79501 9.06583 1.28309 8.1081 1.07569 7.06545L0.830497 7.11422C1.04754 8.20537 1.58327 9.20764 2.36994 9.99432L2.54671 9.81754ZM5.2988 11.2886C4.25615 11.0812 3.29842 10.5692 2.54671 9.81754L2.36994 9.99432C3.15661 10.781 4.15889 11.3167 5.25003 11.5338L5.2988 11.2886ZM8.40433 10.9827C7.42218 11.3895 6.34145 11.496 5.2988 11.2886L5.25003 11.5338C6.34117 11.7508 7.47217 11.6394 8.5 11.2137L8.40433 10.9827ZM10.8166 9.00303C10.2259 9.88694 9.38649 10.5759 8.40433 10.9827L8.5 11.2137C9.52784 10.7879 10.4063 10.0669 11.0244 9.14192L10.8166 9.00303ZM11.7224 6.01684C11.7224 7.07992 11.4072 8.11912 10.8166 9.00303L11.0244 9.14192C11.6425 8.2169 11.9724 7.12936 11.9724 6.01684H11.7224ZM10.1464 2.21789C11.1541 3.22559 11.7209 4.59188 11.7224 6.01698L11.9724 6.01671C11.9708 4.5254 11.3777 3.09563 10.3231 2.04111L10.1464 2.21789ZM6.34728 0.641846C7.77238 0.643387 9.13867 1.21019 10.1464 2.21789L10.3231 2.04111C9.26863 0.986594 7.83886 0.393459 6.34755 0.391846L6.34728 0.641846ZM3.7316 9.93167C4.50588 10.449 5.41619 10.7252 6.34741 10.7252V10.4752C5.46564 10.4752 4.60366 10.2137 3.8705 9.72381L3.7316 9.93167ZM1.99748 7.81864C2.35384 8.67898 2.95732 9.41432 3.7316 9.93167L3.8705 9.72381C3.13733 9.23392 2.56589 8.53762 2.22845 7.72297L1.99748 7.81864ZM1.72955 5.09829C1.54788 6.01162 1.64112 6.95831 1.99748 7.81864L2.22845 7.72297C1.89101 6.90832 1.80272 6.0119 1.97475 5.14707L1.72955 5.09829ZM3.01812 2.68755C2.35965 3.34602 1.91122 4.18497 1.72955 5.09829L1.97475 5.14707C2.14677 4.28223 2.57139 3.48784 3.1949 2.86433L3.01812 2.68755ZM5.42886 1.39898C4.51553 1.58065 3.67659 2.02908 3.01812 2.68755L3.1949 2.86433C3.8184 2.24082 4.6128 1.8162 5.47763 1.64418L5.42886 1.39898ZM8.14921 1.66691C7.28888 1.31055 6.34219 1.21731 5.42886 1.39898L5.47763 1.64418C6.34246 1.47215 7.23889 1.56044 8.05354 1.89788L8.14921 1.66691ZM10.2622 3.40103C9.74489 2.62675 9.00955 2.02327 8.14921 1.66691L8.05354 1.89788C8.86819 2.23532 9.56449 2.80676 10.0544 3.53993L10.2622 3.40103ZM11.0557 6.01684C11.0557 5.08562 10.7796 4.17531 10.2622 3.40103L10.0544 3.53993C10.5443 4.2731 10.8057 5.13507 10.8057 6.01684H11.0557ZM9.67523 9.34466C10.5579 8.462 11.0544 7.26525 11.0557 6.01698L10.8057 6.0167C10.8044 7.19877 10.3343 8.33204 9.49845 9.16788L9.67523 9.34466ZM6.34755 10.7252C7.59582 10.7238 8.79257 10.2273 9.67523 9.34466L9.49845 9.16788C8.66261 10.0037 7.52933 10.4739 6.34727 10.4752L6.34755 10.7252ZM5.88913 5.22534H6.34746V4.97534H5.88913V5.22534ZM5.65343 5.32297C5.71594 5.26046 5.80072 5.22534 5.88913 5.22534V4.97534C5.73442 4.97534 5.58605 5.0368 5.47665 5.14619L5.65343 5.32297ZM5.5558 5.55867C5.5558 5.47027 5.59092 5.38548 5.65343 5.32297L5.47665 5.14619C5.36725 5.25559 5.3058 5.40396 5.3058 5.55867H5.5558ZM5.65343 5.79437C5.59092 5.73186 5.5558 5.64708 5.5558 5.55867H5.3058C5.3058 5.71338 5.36725 5.86175 5.47665 5.97115L5.65343 5.79437ZM5.88913 5.892C5.80072 5.892 5.71594 5.85689 5.65343 5.79437L5.47665 5.97115C5.58605 6.08055 5.73442 6.142 5.88913 6.142V5.892ZM6.34746 5.892H5.88913V6.142H6.34746V5.892ZM6.47246 8.767V6.017H6.22246V8.767H6.47246ZM6.57009 9.0027C6.50758 8.94019 6.47246 8.85541 6.47246 8.767H6.22246C6.22246 8.92171 6.28392 9.07008 6.39332 9.17948L6.57009 9.0027ZM6.80579 9.10034C6.71739 9.10034 6.63261 9.06522 6.57009 9.0027L6.39332 9.17948C6.50271 9.28888 6.65109 9.35034 6.80579 9.35034V9.10034ZM7.0415 9.0027C6.97898 9.06522 6.8942 9.10034 6.80579 9.10034V9.35034C6.9605 9.35034 7.10888 9.28888 7.21827 9.17948L7.0415 9.0027ZM7.13913 8.767C7.13913 8.85541 7.10401 8.94019 7.0415 9.0027L7.21827 9.17948C7.32767 9.07008 7.38913 8.92171 7.38913 8.767H7.13913ZM7.13913 6.017V8.767H7.38913V6.017H7.13913ZM6.90725 5.45721C7.05572 5.60568 7.13913 5.80704 7.13913 6.017H7.38913C7.38913 5.74074 7.27938 5.47579 7.08403 5.28044L6.90725 5.45721ZM6.34746 5.22534C6.55743 5.22534 6.75879 5.30875 6.90725 5.45721L7.08403 5.28044C6.88868 5.08509 6.62373 4.97534 6.34746 4.97534V5.22534ZM6.34735 4.30848C6.79608 4.30848 7.15985 3.94471 7.15985 3.49598H6.90985C6.90985 3.80664 6.65801 4.05848 6.34735 4.05848V4.30848ZM5.53485 3.49598C5.53485 3.94471 5.89862 4.30848 6.34735 4.30848V4.05848C6.03669 4.05848 5.78485 3.80664 5.78485 3.49598H5.53485ZM6.34735 2.68348C5.89862 2.68348 5.53485 3.04725 5.53485 3.49598H5.78485C5.78485 3.18532 6.03669 2.93348 6.34735 2.93348V2.68348ZM7.15985 3.49598C7.15985 3.04725 6.79608 2.68348 6.34735 2.68348V2.93348C6.65801 2.93348 6.90985 3.18532 6.90985 3.49598H7.15985Z" fill="#686868"></path>
+                        </svg>
+                      </a>
+                      `
+                  return button
+                }
+              }
+          };
+
+    function ponderadoProcess(obj) {
+      const peso_experiencia_cargo = 0.40;
+      const peso_experiencia_herramienta = 0.35;
+      const peso_nivel_ingles = 0.20;
+      const peso_titulo_academico = 0.05;
+
+      const puntaje_ponderado = 
+          (obj.experiencia_cargo * peso_experiencia_cargo) +
+          (obj.experiencia_herramienta * peso_experiencia_herramienta) +
+          (obj.nivel_ingles * peso_nivel_ingles) +
+          (obj.titulo_academico * peso_titulo_academico);
+
+      return parseFloat(puntaje_ponderado.toFixed(1));
+    }
+
+    function renderData(data) {
+      pondeData = Object.values(dataGlobal).map(obj => ({
+        
+          ...obj.ponde,  // Copia todas las propiedades de ponde
+          nombreCandidato: obj.info.nombre_candidato, // Agrega el nombre del candidato
+          puntajePonderado: ponderadoProcess(obj.ponde)
+      }));;
+      console.log('pondeData', pondeData)
+      drawTableGridGeneral(pondeData,'grid-export',headers,10,true,null,55)
+    }
+
+    function fetchOfertasLaborales(idOferta) {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(`/ponde/api/candidatos_por_oferta/${idOferta}/`, {
+          method: 'GET',
+          credentials: 'include',  // Asegura el envío de cookies de sesión
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrftoken
+          },
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('data API',data)
+          dataGlobal = data
+          renderData(dataGlobal)
+      })
+      .catch(error => console.error("Error al obtener datos filtrados:", error));
+  }
+
+
+  $('#id_ofertas').on('change', function() {
+    var idOferta = $(this).val(); // Obtener el valor seleccionado
+    fetchOfertasLaborales(idOferta);
+  });
+      
+  </script>
+{% endblock content %}
