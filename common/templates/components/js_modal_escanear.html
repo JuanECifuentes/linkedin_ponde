@@ -1,0 +1,43 @@
+{% load static %}
+
+<!-- Modal -->
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lg" id="modal_escanear" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" style="position: relative;">
+    <div class="modal-custom-message modal-content formulario-escanear">
+      <button type="button" class="container_btn-close" data-bs-dismiss="modal" aria-label="Close">
+        <svg class="close-btn" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M9.64251 11.5938L5.99888 7.94713L2.35224 11.5938C2.10708 11.8202 1.77833 11.9589 1.41734 11.9589C0.655629 11.9589 0.0378608 11.3411 0.0378608 10.5794C0.0378608 10.2184 0.176559 9.88965 0.403724 9.64375L0.402974 9.64487L4.04961 5.99824L0.402974 2.35161C0.154067 2.10232 0 1.7582 0 1.3781C0 0.617132 0.616644 0.000488281 1.37761 0.000488281C1.37873 0.000488281 1.37948 0.000488281 1.38061 0.000488281C1.38173 0.000488281 1.38361 0.000488281 1.38511 0.000488281C1.76371 0.000488281 2.10596 0.154181 2.35374 0.402712L6.00037 4.04934L9.64401 0.402712C9.89142 0.164677 10.2284 0.0177318 10.5999 0.0177318C11.3616 0.0177318 11.9794 0.6355 11.9794 1.39721C11.9794 1.76795 11.8332 2.1042 11.5955 2.35198L11.5959 2.35161L7.94927 5.99824L11.5959 9.64487C11.8456 9.89453 12 10.2394 12 10.6203C12 11.382 11.3822 11.9997 10.6205 11.9997C10.2397 11.9997 9.89479 11.8453 9.64513 11.5956L9.64251 11.5938Z" fill="#686868"/>
+        </svg>
+      </button>
+      <div class="modal_title-text" style="border-bottom: 1px solid #d4d4d4;font-size: 16px;">
+        <span>Búsqueda Automática en LinkedIn</span>
+      </div>
+      <div style="width: 100%;">
+        <label class="modal_title-text" style="font-size: 16px;" for="exampleFormControlInput1">Url de la Oferta</label>
+        <input type="text" class="form-control" id="url_oferta" placeholder="https://www.linkedin.com/">
+      </div>
+      <div style="border-bottom: 1px solid #d4d4d4;width: 100%;">
+        <div class="modal_title-text" style="text-align: justify;font-size: 16px;">Credenciales de acceso</div>
+        <div class="modal_text" style="width: 100%;">
+          <label for="exampleFormControlTextarea1">Email</label>
+          <input type="email" class="form-control" id="email_acceso" placeholder="name@example.com" autocomplete="off" >
+        </div>
+        <div class="modal_text" style="width: 100%;">
+          <label for="exampleFormControlTextarea1">Contraseña</label>
+          <input type="password" class="form-control" id="contraseña_acceso" placeholder="password123" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
+        </div>
+      </div>
+      <div style="width: 80%;">
+        <div class="modal_check-container">
+          <input class="size-4 rounded-sm border-gray-300" style="width: 20px;height: 20px;" type="checkbox" id="modal_checkbox" onchange="checkboxModal(this,'Start')">
+          <span class="modal_text">Entiendo que estos datos solo se usaran una vez para hacer una busqueda automatica en una oferta de linkedin</span>
+        </div>
+      </div>
+      
+      <button id="start_modal-btn" class="modal_btn disabled" type="button" onclick="sendForm()" data-bs-dismiss="modal" aria-label="Close" aria-hidden="false" disabled>
+        <span>Realizar ejecución</span>
+      </button>
+    </div>
+  </div>
+</div>
