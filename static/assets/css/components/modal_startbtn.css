@@ -58,13 +58,17 @@
   text-align: justify;
 }
 
-  .modal_info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--Numbers-Eight-multiples-12, 12px);
-    align-self: stretch;
-    align-items: center;
-    padding: var(--Numbers-Eight-multiples-6, 6px) var(--Numbers-Eight-multiples-16, 16px);
+.formulario-escanear div.modal_text {
+  padding-bottom: 16px;
+}
+
+.modal_info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--Numbers-Eight-multiples-12, 12px);
+  align-self: stretch;
+  align-items: center;
+  padding: var(--Numbers-Eight-multiples-6, 6px) var(--Numbers-Eight-multiples-16, 16px);
 
   border-radius: var(--Numbers-Eight-multiples-8, 8px);
   border: 1px solid var(--Borders-Inputs-inputs-primary, #D4D4D4);
@@ -97,14 +101,15 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
+  
 
   border-radius: var(--Numbers-Eight-multiples-200, 200px);
-  border: 1px solid var(--Borders-Buttons-button-info, #00A1C9);
+  border: 1px solid var(--Borders-Buttons-button-info, #673ab7);
   background: var(--Surfaces-Backgrounds-background-default, #FFF);
 }
 
 .modal_btn span {
-  color: var(--Borders-Buttons-button-info, #00A1C9);
+  color: var(--Borders-Buttons-button-info, #673ab7);
   font-feature-settings: 'liga' off, 'clig' off;
 
   /* Desktop/Title/M */
@@ -117,7 +122,7 @@
 }
 
 .modal_btn:hover {
-  background: var(--Color-Primaries-P---02, #00A1C9);
+  background: var(--Color-Primaries-P---02, #673ab7);
 }
 
 .modal_btn:hover span {
@@ -186,6 +191,11 @@ button:disabled {
 
 button:disabled svg {
   opacity: 0.2;
+}
+
+.border-morado {
+  border: #673ab7 solid 1px ;
+  color: #673ab7;
 }
 
 .point-tag {
@@ -264,6 +274,16 @@ button:disabled svg {
 
 .role-tag__blue span{
   background-color: var(--Color-Secondaries-S---02, #00A1C9);;
+}
+
+.role-tag__purple {
+  border-radius: var(--Numbers-Eight-multiples-4, 4px);
+  background: var(--Color-Hues-H---04, #dacfec);
+  color: var(--Color-Secondaries-S---02, #673ab7);
+}
+
+.role-tag__purple span{
+  background-color: var(--Color-Secondaries-S---02, #673ab7);;
 }
 
 

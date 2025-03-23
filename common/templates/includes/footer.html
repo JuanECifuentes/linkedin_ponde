@@ -1,16 +1,18 @@
-<footer class="pc-footer">
+{% load static %}
+<footer class="pc-footer" style="background: white;">
   <div class="footer-wrapper container-fluid">
     <div class="row">
-      <div class="col my-1">
+      <div class="col my-1" style="display: flex;flex-direction: row;justify-content: space-between;">
         <p class="m-0">
-          &copy; <a href="https://codedthemes.com/?ref=appseed" target="_blank">Codedthemes</a> - Coded by AppSeed.
+          &copy; Hecho con ❤️ por <a href="https://codedthemes.com/?ref=appseed" target="_blank">Sooniverse</a>
         </p>
+        <a target="_blank" href="https://www.instagram.com/sooniverse.online/" target="_blank"> <img style="height: 18px;" src="{% static 'assets/images/redes_icons/instagram.svg' %}"></img> </a>
       </div>
+      
       <div class="col-auto my-1">
+        
         <ul class="list-inline footer-link mb-0">
-          <li class="list-inline-item"><a target="_blank" href="https://appseed.us/product/berry-dashboard/django/" target="_blank">Download</a></li>
-          <li class="list-inline-item"><a target="_blank" href="https://appseed.us/product/berry-dashboard-pro/django/" target="_blank">PRO Version</a></li>
-          <li class="list-inline-item"><a target="_blank" href="https://appseed.us/support/" target="_blank">Support</a></li>
+          <li></li> <!-- class="ti ti-brand-instagram" -->
         </ul>
       </div>
     </div>

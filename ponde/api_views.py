@@ -10,11 +10,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-""" from decimal import Decimal
-from datetime import date
+from django_q.tasks import async_task
 from django.http import JsonResponse
-from django.db.models import Q
-from django.views import View """
+from django_q.models import OrmQ
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.decorators.csrf import csrf_exempt
@@ -52,3 +50,34 @@ class CandidatosPorOfertaAPIView(APIView):
         
         except OfertasLaborales.DoesNotExist:
             return Response({"error": "La oferta laboral no existe."}, status=status.HTTP_404_NOT_FOUND)
+        
+def ejecucion_tareas(request):
+    if request.method == 'POST':
+        func = 'ponde.services.explore_linkedin_ad'
+        try:
+            data = json.loads(request.body)
+        except:
+            return JsonResponse({'error': 'Error en el JSON'}, status=400)
+        
+        print('data:', data)
+
+        url_anuncio = data.get('url_oferta')
+        username = data.get('email_acceso')
+        password = data.get('contraseña_acceso')
+
+        task_name = f"linkedin_ad_{url_anuncio.replace('https://www.linkedin.com/hiring/jobs/','')[:21]}"
+
+        if not all([url_anuncio, username, password]):
+            return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+        tasks = [obj.func() for obj in OrmQ.objects.all()]
+        if func not in tasks:
+            task_id = async_task(func, url_anuncio, username, password, task_name=task_name)
+            print(f'Se asigno nueva tarea con id: {task_id} y func: {func}')
+        else:
+            print('Ya existe la tarea')
+
+        
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)

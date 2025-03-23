@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'admin_berry.apps.AdminBerryConfig',
-
+    'django_q',
     'rest_framework',
 
     'ponde'
@@ -171,6 +171,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, '../staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+Q_CLUSTER = {
+    'name': 'ponde_linkedin',
+    #'workers': 1, #Limite de Nucleos
+    'catch_up': True,  # Intentar ponerse al día con las tareas perdidas
+    'orm': 'default',
+    'ack_failures': True,
+    'max_attempts': 1,
+    'timeout': 2500,
+    'recycle': 200,
+    'retry': 3000, # estaba en 3000
+    'scheduler': True,
+    'queue_limit': 50,  # Límite de la cola de tareas
+}
 
 SESSION_COOKIE_AGE = 14400
 LOGIN_REDIRECT_URL = '/'
