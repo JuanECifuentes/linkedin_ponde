@@ -189,7 +189,7 @@ def linkedin_candidatos(url_anuncio: str, username: str, password: str):
             final_data['caught'] += 1
             logging.info(f"{row_dict['Nombre']} was processed successfully") #TODO Falta comprobar que tome todas las ofertas
 
-            if index == 5:
+            if index == 20:
                 break
 
     return final_data

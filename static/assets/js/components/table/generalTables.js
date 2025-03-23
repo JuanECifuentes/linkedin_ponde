@@ -130,8 +130,8 @@ function drawTableGridGeneral(data, idTable, headers, paginationPage, posicion, 
             domLayout: 'autoHeight',
             rowStyle: { fontFamily: 'Roboto', fontSize: '20px' },
             getRowHeight: function (params) {
-                const lineHeight = 18; // Altura de una línea en píxeles -> Se modificó de 18 a 10
-                const padding = 12; // Espacio adicional para padding
+                const lineHeight = 5; // Altura de una línea en píxeles -> Se modificó de 18 a 10
+                const padding = 8; // Espacio adicional para padding
                 let maxLines = 1; // Mínimo una línea por defecto
                 // Obtener el ancho de las columnas
                 const columnDefs = params.api.getColumnDefs(); // Obtener las definiciones de las columnas
@@ -145,7 +145,7 @@ function drawTableGridGeneral(data, idTable, headers, paginationPage, posicion, 
                     if (typeof cellContent === 'string' && !cellContent.includes('<img')) {
                         // Obtener el ancho de la columna actual
                         const columnWidth = columnWidths[key];
-                        const charsPerLine = Math.floor(columnWidth / 12); // Aproximación de caracteres por línea (24px por caracter)
+                        const charsPerLine = Math.floor(columnWidth / 20); // Aproximación de caracteres por línea (24px por caracter)
                         const cellLines = Math.ceil(cellContent.length / charsPerLine);
                         maxLines = Math.max(maxLines, cellLines);
                     }
@@ -193,7 +193,7 @@ function drawTableGridGeneral(data, idTable, headers, paginationPage, posicion, 
             paginationContainer.style.alignItems = 'center';
             paginationContainer.style.gap = '10px';
             paginationContainer.style.padding = '0 15px';
-
+    
             const prevButton = document.createElement('div');
             prevButton.classList.add('paginate_button', 'previous', 'disabled');
             prevButton.id = `paginate_previous_${paginationId}`;
@@ -244,15 +244,25 @@ function drawTableGridGeneral(data, idTable, headers, paginationPage, posicion, 
             paginationDivContainer.appendChild(paginationContainer);
         }
         const gridContainer = document.querySelector(`#${idTable} .ag-center-cols-container`);
-        const viewportContainer = document.querySelector(`#${idTable} .ag-center-cols-viewport`);
+        const gridHeader = document.querySelector(`#${idTable} .ag-header`);
+
+        const Header = gridHeader.style.height.replace('px', '')
         const autoHeightLayuot  =document.querySelector(`#${idTable} .ag-layout-auto-height`);
-        let tamanoTabla = heightRow ? heightRow * 10 : 400
+        let tamanoTabla
+        if (data.length > 10){
+            tamanoTabla = heightRow ? heightRow * 10 : 400
+        }else{
+            tamanoTabla = heightRow ? heightRow * data.lenght : 400
+        }
+
         if (gridContainer) {
-            viewportContainer.style.maxHeight = `${tamanoTabla}px`;
+            element.style.setProperty('height', `${tamanoTabla + parseInt(Header)}px `)
             gridContainer.style.maxHeight = `${tamanoTabla}px`; // Ajusta la altura según sea necesario
             gridContainer.style.overflowY = 'auto';  // Habilita el scroll vertical
             gridContainer.style.overflowX = 'hidden'
         }
+        gridDiv.querySelector('.ag-header').style.setProperty('margin-top', '0px', 'important');
+
     } else {
         console.error("El 'data' recibido no es un array válido.");
     }

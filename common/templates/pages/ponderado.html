@@ -58,7 +58,10 @@
               </div>
 
               <div class="card-body">
-                <div id="grid-export" style="width: 100%; padding: 20px;" class="ag-theme-balham"></div>
+                <div style="overflow: hidden;position: relative;">
+                  <div id="grid-export" style="min-height: 450px;width: 100%; padding: 20px;" class="ag-theme-balham"></div>
+                </div>
+                
               </div>
             </div>
           </div>
@@ -227,7 +230,8 @@
                     }
                   element.innerHTML = target
               } else {
-                createDoughnutChart(ponde[key], 100, key, colorsKpi[key])
+                const pendiente = 100 - ponde[key]
+                createDoughnutChart(ponde[key], pendiente, key, colorsKpi[key])
               }
               
             }
