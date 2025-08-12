@@ -58,7 +58,14 @@
               </div>
 
               <div class="card-body">
-                <div style="overflow: hidden;position: relative;">
+
+                <div id="initial-text" style="height: 450px; display: flex; justify-content: center; align-items: center;">
+                  <p class="text-center text-gray-500">Ninguna oferta ha sido seleccionada</p>
+                </div>
+                <div id="no-data" style="height: 450px; display: flex; justify-content: center; align-items: center;display: none;">
+                  <p class="text-center text-gray-500">No existen candidatos para esta oferta laboral.</p>
+                </div>
+                <div style="overflow: hidden;position: relative;display: none;" id="table-container">
                   <div id="grid-export" style="min-height: 450px;width: 100%; padding: 20px;" class="ag-theme-balham"></div>
                 </div>
                 
@@ -481,6 +488,9 @@
           nombreCandidato: obj.info.nombre_candidato, // Agrega el nombre del candidato
           puntajePonderado: ponderadoProcess(obj.ponde)
       }));;
+
+      pondeData.sort((a, b) => b.puntajePonderado - a.puntajePonderado); // Ordenar por puntaje ponderado descendente
+
       drawTableGridGeneral(pondeData,'grid-export',headers,10,true,null,55)
     }
 
@@ -498,7 +508,17 @@
       .then(response => response.json())
       .then(data => {
           dataGlobal = data
-          renderData(dataGlobal)
+          if (dataGlobal && Object.keys(dataGlobal).length > 0) {
+            renderData(dataGlobal)
+            document.getElementById('table-container').style.display = '';
+            document.getElementById('initial-text').style.display = 'none';
+            document.getElementById('no-data').style.display = 'none';
+          } else {
+            document.getElementById('no-data').style.display = '';
+            document.getElementById('table-container').style.display = 'none';
+            document.getElementById('initial-text').style.display = 'none';
+          }
+          
       })
       .catch(error => console.error("Error al obtener datos filtrados:", error));
   }
